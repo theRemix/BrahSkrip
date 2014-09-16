@@ -1,13 +1,15 @@
 using BrahLines;
 class BrahCompiler
 {
-  
+
+  public var scrip_name:String;  
   // private var kines:Array<String>;
   // private var dakines:Array<String>;
-  private var out:List<BrahDirective>;
+  public var out:List<BrahDirective>;
 
-  public function new(main_src:String)
+  public function new(scrip_name:String, main_src:String)
   {
+    this.scrip_name = scrip_name;
     // dakines = new Array<String>();
     out = new List<BrahDirective>();
 
@@ -36,8 +38,6 @@ class BrahCompiler
       }
     }
 
-    trace(out);
-
   }
 
   private inline function parseLine(line:String, line_num:Int):Void
@@ -54,8 +54,61 @@ class BrahCompiler
     
   }  
 
-  public static inline function compile(main_src:String):Void
+  public static inline function compile(scrip_name:String, main_src:String):Void
   {
-    var bc = new BrahCompiler(main_src);
+    var bc = new BrahCompiler(scrip_name, main_src);
+
+    // temp dir
+    var proc = new sys.io.Process( "mktemp" , ["-d", "-t", "brahscrip"] );
+    var temp_path = proc.stdout.readLine();
+    proc.close();
+
+    // create sauce
+    var main_class = scrip_name.titleize();
+    var main_file_name = main_class + ".hx";
+    var main_class_content = createClassFile(main_class, bc.out);
+    sys.io.File.saveContent('${temp_path}/${main_file_name}', main_class_content);
+
+    // compile
+    proc = new sys.io.Process( "haxe" , ["-cp", temp_path, "-main", main_class, "-cpp", '${temp_path}/bin']);
+
+    try{
+      while( true )
+      {
+        Main.compiler_log(proc.stdout.readLine());
+        Main.error(proc.stderr.readLine());
+      }
+    }catch( ex:haxe.io.Eof ){}
+    var status = proc.exitCode();
+    proc.close();
+
+    // clean up
+// #if debug
+    Main.debug('Temp files saved to: $temp_path');
+// #else
+//     proc = new sys.io.Process( "rm" , ["-Rf", temp_path]);
+// #end
+
+    if(status == 0){
+      sys.FileSystem.rename( '${temp_path}/bin/${main_class}', '${scrip_name}.brah' );
+      Main.compiler_log('All Pau, compiled binary saved to: ${scrip_name}.brah');
+    }else{
+      Main.error('Too many errors brah, try fix!');
+    }
+  }
+  private static inline function createClassFile(name:String, out:List<BrahDirective>):String
+  {
+    var content = new StringBuf();
+    
+    content.add('class $name{');
+      content.add('public static function main(){');
+        for(bd in out){
+          content.add(bd.toHx());
+          content.add('\n');
+        }
+      content.add('}');
+    content.add('}');
+
+    return content.toString();
   }
 }

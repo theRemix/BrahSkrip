@@ -3,7 +3,7 @@ BrahSkrip
 
 ### Pidgin Script  
 (these may all change at any time, k)  
-depends on haxe and node (for now)  
+depends on haxe, hxcpp, gcc, mktemp, and node (for now)  
 
 compiles through gcc, via haxe  
   **brah main**  

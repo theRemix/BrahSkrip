@@ -13,7 +13,6 @@
 
 */
 
-import cpp.Lib;
 import sys.FileSystem;
 
 class Main
@@ -42,7 +41,7 @@ class Main
     if( !StringTools.endsWith(scrip_name, '.scrip') ) scrip_name += '.scrip';
     if(FileSystem.exists(scrip_name)){
 
-      BrahCompiler.compile( sys.io.File.getContent(scrip_name) );
+      BrahCompiler.compile( scrip_name.substr(0, scrip_name.length - 6), sys.io.File.getContent(scrip_name) );
 
     }else error('${scrip_name} does not exist!');
   }
@@ -52,9 +51,17 @@ class Main
     trace('transpiling ${scrip_name}');
   }
 
-  private static inline function error(message:String):Void
+  public static inline function compiler_log(message:String):Void
   {
-    Lib.print('FAKA! $message');
+    Sys.println('[COMPILER] $message');
+  }
+  public static inline function debug(message:String):Void
+  {
+    Sys.println('[DEBUGGAH] $message');
+  }
+  public static inline function error(message:String):Void
+  {
+    Sys.println('FAKA! $message');
   }
 
   static public function main()

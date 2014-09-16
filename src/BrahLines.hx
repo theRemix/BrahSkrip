@@ -61,6 +61,24 @@ class BrahLines
     }
   }
 
+  public static inline function toHx(bd:BrahDirective):String
+  {
+    return switch (bd.type) {
+      case VARIABLE(name, val):
+        if(val == null)
+          'var $name;';
+        else
+          'var $name = "$val";';
+      case ASSIGN(name, val): '$name = "$val";';
+      case PRINT(val): 'Sys.println("$val");';
+      case IF(condition): 'if($condition){';
+      case ELSE_IF(condition): '}else if($condition){';
+      case ELSE: "}else{";
+      case ENDIF: "}";
+      case UNKNOWN: "";
+    }
+  }
+
   public static inline function isMultiline(line:String):Bool
   {
     // if conditional
@@ -80,5 +98,10 @@ class BrahLines
     }
 
     return false;
+  }
+
+  public static inline function titleize(name:String):String
+  {
+    return name.charAt(0).toUpperCase() + name.substr(1);
   }
 }
