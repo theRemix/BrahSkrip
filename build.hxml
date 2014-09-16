@@ -1,0 +1,4 @@
+-cp src
+-cpp bin
+-main Main
+-cmd cp bin/Main sampo/brah
