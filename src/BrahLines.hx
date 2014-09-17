@@ -1,3 +1,4 @@
+using BrahLines;
 class BrahLines
 {
 
@@ -70,7 +71,7 @@ class BrahLines
         else
           'var $name = ${eval(val)};';
       case ASSIGN(name, val): '$name = "$val";';
-      case PRINT(val): 'Sys.println(${eval(val)});';
+      case PRINT(val): 'Sys.println(${string_eval(val)});';
       case IF(condition): 'if($condition){';
       case ELSE_IF(condition): '}else if($condition){';
       case ELSE: "}else{";
@@ -80,6 +81,8 @@ class BrahLines
   }
 
   /*
+    if val is multiword, eval each word, concat each string and add each number or variable
+
     if val is a variable, use variable name
     else
       if its a number
@@ -89,6 +92,28 @@ class BrahLines
   */
   public static inline function eval(val:Dynamic):String
   {
+    var vals = Std.string(val).split(" ");
+    if( vals.length > 1 ){
+
+      // might not need to do it before hand
+      for(v in 0...vals.length){
+        vals[v] = eval(vals[v]);
+      }
+
+      return Lambda.fold(vals, function (b:String, a:String):String
+      {
+        if( a.evalsLiteralString() ){ // a is literal
+          if( b.evalsLiteralString() ){ // combine
+            return a.substr(0, a.length-1) + " " + b.substr(1);
+          }else{ // b is number or variable
+            return a + ' + " " + ' + b;
+          }
+        }else{
+          return a + ' + " " + ' + b;
+        }
+
+      }, '""');
+    }
     if(BrahCompiler.variables.exists( StringTools.trim( Std.string(val) ))){
       return Std.string(val);
     }else{
@@ -100,6 +125,52 @@ class BrahLines
         return '"${ Std.string( val ) }"';
       }
     }
+  }
+
+  /*
+    like eval, except only for Sys.println
+    always returns strings
+  */
+  private static inline function string_eval(val:Dynamic):String
+  {
+    var vals = Std.string(val).split(" ");
+    if( vals.length > 1 ){
+
+      // might not need to do it before hand
+      for(v in 0...vals.length){
+        vals[v] = eval(vals[v]);
+      }
+
+      return Lambda.fold(vals, function (b:String, a:String):String
+      {
+        if( a.evalsLiteralString() ){ // a is literal
+          if( b.evalsLiteralString() ){ // combine
+            return a.substr(0, a.length-1) + " " + b.substr(1);
+          }else{ // b is number or variable
+            return a + ' + " " + Std.string(' + b + ')';
+          }
+        }else{
+          return 'Std.string(' + a + ') + " " + ' + b;
+        }
+
+      }, '""');
+    }
+    if(BrahCompiler.variables.exists( StringTools.trim( Std.string(val) ))){
+      return Std.string(val);
+    }else{
+      if( Std.parseFloat(val) == val ){
+        return Std.string( Std.parseFloat(val) );
+      }else if( Std.parseInt(val) == val ){
+        return Std.string( Std.parseInt(val) );
+      }else{ // String;
+        return '"${ Std.string( val ) }"';
+      }
+    }
+  }
+
+  public static inline function evalsLiteralString(a:String):Bool
+  {
+    return StringTools.startsWith(a, '"') && StringTools.endsWith(a, '"');
   }
 
   public static inline function isMultiline(line:String):Bool
