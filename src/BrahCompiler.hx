@@ -4,18 +4,21 @@ class BrahCompiler
 
   public var scrip_name:String;  
   // private var kines:Array<String>;
-  // private var dakines:Array<String>;
+  public static var variables:Map<String,Dynamic>;
+  public static var dakines:Array<Dakine>;
   public var out:List<BrahDirective>;
 
   public function new(scrip_name:String, main_src:String)
   {
     this.scrip_name = scrip_name;
-    // dakines = new Array<String>();
+    dakines = new Array<Dakine>();
+    variables = new Map<String,Dynamic>();
     out = new List<BrahDirective>();
 
     var lines = main_src.split('\n');
     var line:String;
     var line_num = 0;
+    var bd:BrahDirective;
     
     while(lines.length > 0){
       line = lines.shift();
@@ -24,11 +27,13 @@ class BrahCompiler
       if(line.isMultiline()){
         var multiline = new Array<BrahDirective>();
         while( lines.length > 0 && !line.isMultilineEnd(multiline[0]) ){
-          multiline.push({
+          bd = {
             type : line.bdType(),
             line : line,
             line_number : line_num
-          });
+          };
+          multiline.push(bd);
+          storeVars(bd);
           line = lines.shift();
           line_num++;
         }
@@ -42,17 +47,33 @@ class BrahCompiler
 
   private inline function parseLine(line:String, line_num:Int):Void
   {
-    out.add({
+    var bd = {
       type : line.bdType(),
       line : line,
       line_number : line_num
-    });
+    };
+    out.add(bd);
+    storeVars(bd);
   }
 
   private inline function parseMultiline(multiline:Array<BrahDirective>):Void
   {
     
-  }  
+  }
+
+  // only store if VARIABLE
+  private inline function storeVars(bd:BrahDirective):Void
+  {
+    switch (bd.type) {
+      case VARIABLE(name,value):
+        variables.set(name, value);
+        dakines.push({
+          position : bd.line_number,
+          name : name
+        });
+      default: null;
+    }
+  }
 
   public static inline function compile(scrip_name:String, main_src:String):Void
   {

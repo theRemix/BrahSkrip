@@ -68,14 +68,37 @@ class BrahLines
         if(val == null)
           'var $name;';
         else
-          'var $name = "$val";';
+          'var $name = ${eval(val)};';
       case ASSIGN(name, val): '$name = "$val";';
-      case PRINT(val): 'Sys.println("$val");';
+      case PRINT(val): 'Sys.println(${eval(val)});';
       case IF(condition): 'if($condition){';
       case ELSE_IF(condition): '}else if($condition){';
       case ELSE: "}else{";
       case ENDIF: "}";
       case UNKNOWN: "";
+    }
+  }
+
+  /*
+    if val is a variable, use variable name
+    else
+      if its a number
+        return the number
+      else
+        quote val and return
+  */
+  public static inline function eval(val:Dynamic):String
+  {
+    if(BrahCompiler.variables.exists( StringTools.trim( Std.string(val) ))){
+      return Std.string(val);
+    }else{
+      if( Std.parseFloat(val) == val ){
+        return Std.string( Std.parseFloat(val) );
+      }else if( Std.parseInt(val) == val ){
+        return Std.string( Std.parseInt(val) );
+      }else{ // String;
+        return '"${ Std.string( val ) }"';
+      }
     }
   }
 
