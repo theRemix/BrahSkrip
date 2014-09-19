@@ -28,6 +28,19 @@ jon is 31 years old
 ````
 
 ````
+da name stay junior
+da age stay 31
+
+name stay "junior" ya?
+  samps hello, i am name and am age years old
+k
+````
+result
+````
+hello, i am junior and am 31 years old
+````
+
+````
 da ting stay 3 k
 
 ting stay 2 ya?

@@ -23,24 +23,8 @@ class BrahCompiler
     while(lines.length > 0){
       line = lines.shift();
       line_num++;
-
-      if(line.isMultiline()){
-        var multiline = new Array<BrahDirective>();
-        while( lines.length > 0 && !line.isMultilineEnd(multiline[0]) ){
-          bd = {
-            type : line.bdType(),
-            line : line,
-            line_number : line_num
-          };
-          multiline.push(bd);
-          storeVars(bd);
-          line = lines.shift();
-          line_num++;
-        }
-        parseMultiline(multiline);
-      }else{
-        parseLine(line, line_num);
-      }
+      
+      parseLine(line, line_num);
     }
 
   }
@@ -54,11 +38,6 @@ class BrahCompiler
     };
     out.add(bd);
     storeVars(bd);
-  }
-
-  private inline function parseMultiline(multiline:Array<BrahDirective>):Void
-  {
-    
   }
 
   // only store if VARIABLE

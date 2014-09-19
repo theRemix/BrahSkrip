@@ -6,29 +6,6 @@ class BrahLines
   {
     line = StringTools.trim(line);
 
-    // VARIABLE(name:String);
-    if( StringTools.startsWith( line, '${Syntax.VARIABLE} ' )){
-      var pair = StringTools.trim(line.substr(Syntax.VARIABLE.length)).split( Syntax.ASSIGN );
-      var name = StringTools.trim(pair[0]);
-
-      if(pair.length > 1){
-        var val = StringTools.trim(pair[1]);
-        // VARIABLE(name:String, ?val:Dynamic); and ASSIGN
-        return VARIABLE( name, val );
-      }else{
-        return VARIABLE( name );
-      }
-    }else
-
-    // ASSIGN(val:Dynamic);
-    if( line.split( Syntax.ASSIGN ).length > 1 ){
-      var pair = line.split( Syntax.ASSIGN );
-      return ASSIGN(
-        StringTools.trim( pair[0] ),
-        StringTools.trim( pair[1] )
-      );
-    }else
-
     // PRINT(val:Dynamic);
     if( StringTools.startsWith( line, Syntax.PRINT ) ){
       return PRINT( line.substr(Syntax.PRINT.length) );
@@ -56,6 +33,30 @@ class BrahLines
     if( line == Syntax.END ){
       return ENDIF;
     }else
+
+    // VARIABLE(name:String);
+    if( StringTools.startsWith( line, '${Syntax.VARIABLE} ' )){
+      var pair = StringTools.trim(line.substr(Syntax.VARIABLE.length)).split( Syntax.ASSIGN );
+      var name = StringTools.trim(pair[0]);
+
+      if(pair.length > 1){
+        var val = StringTools.trim(pair[1]);
+        // VARIABLE(name:String, ?val:Dynamic); and ASSIGN
+        return VARIABLE( name, val );
+      }else{
+        return VARIABLE( name );
+      }
+    }else
+
+    // ASSIGN(val:Dynamic);
+    if( line.split( Syntax.ASSIGN ).length > 1 ){
+      var pair = line.split( Syntax.ASSIGN );
+      return ASSIGN(
+        StringTools.trim( pair[0] ),
+        StringTools.trim( pair[1] )
+      );
+    }else
+
     // nothing
     {
       return UNKNOWN;
@@ -72,7 +73,7 @@ class BrahLines
           'var $name = ${eval(val)};';
       case ASSIGN(name, val): '$name = "$val";';
       case PRINT(val): 'Sys.println(${string_eval(val)});';
-      case IF(condition): 'if($condition){';
+      case IF(condition): 'if(${eval_condition(condition)}){';
       case ELSE_IF(condition): '}else if($condition){';
       case ELSE: "}else{";
       case ENDIF: "}";
@@ -166,6 +167,27 @@ class BrahLines
         return '"${ Std.string( val ) }"';
       }
     }
+  }
+
+  private static inline function eval_condition(line:String):String
+  {
+    var out = new StringBuf();
+
+    // comparisons
+    var comparisons = StringTools.trim(line).split("stay");
+    
+    if(comparisons.length > 1){
+      out.add( Lambda.map(comparisons, function(part:String):String
+      {
+        return StringTools.trim(part);
+      }).join(" == ") );
+    }else out.add( eval(line) ); // boolean, hopefully
+
+    // grouping
+    
+
+    return out.toString();
+
   }
 
   public static inline function evalsLiteralString(a:String):Bool
